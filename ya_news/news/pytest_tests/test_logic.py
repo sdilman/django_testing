@@ -32,8 +32,8 @@ def comment_collection(news, author):
 
 
 @pytest.fixture
-def detail_url(news_id_args):
-    return reverse('news:detail', args=news_id_args)
+def detail_url(news):
+    return reverse('news:detail', args=(news.id,))
 
 
 @pytest.mark.usefixtures('news_collection')

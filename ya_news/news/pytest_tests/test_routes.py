@@ -9,7 +9,7 @@ from pytest_django.asserts import assertRedirects
     "name, args",
     (
         ('news:home', None),
-        ('news:detail', pytest.lazy_fixture('news_id_args')),
+        ('news:detail', pytest.lazy_fixture('news')),
         ('users:login', None),
         ('users:logout', None),
         ('users:signup', None)
@@ -17,7 +17,7 @@ from pytest_django.asserts import assertRedirects
 )
 @pytest.mark.django_db
 def test_pages_availability(client, name, args):
-    url = reverse(name, args=args)
+    url = reverse(name, args=None if not args else (args.id,))
     response = client.get(url)
     assert response.status_code == HTTPStatus.OK
 
@@ -25,8 +25,8 @@ def test_pages_availability(client, name, args):
 @pytest.mark.parametrize(
     "name, args",
     (
-        ('news:edit', pytest.lazy_fixture('comment_id_args')),
-        ('news:delete', pytest.lazy_fixture('comment_id_args'))
+        ('news:edit', pytest.lazy_fixture('comment')),
+        ('news:delete', pytest.lazy_fixture('comment'))
     )
 )
 @pytest.mark.parametrize(
@@ -39,12 +39,12 @@ def test_pages_availability(client, name, args):
 def test_availability_for_comment_edit_and_delete(
     name, args, user_client, status
 ):
-    url = reverse(name, args=args)
+    url = reverse(name, args=(args.id,))
     response = user_client.get(url)
     assert response.status_code == status
 
 
 @pytest.mark.parametrize("name", ('news:edit', 'news:delete'))
-def test_redirect_for_anonymous_client(client, name, comment_id_args):
-    url = reverse(name, args=comment_id_args)
+def test_redirect_for_anonymous_client(client, name, comment):
+    url = reverse(name, args=(comment.id,))
     assertRedirects(client.get(url), f'{reverse("users:login")}?next={url}')
