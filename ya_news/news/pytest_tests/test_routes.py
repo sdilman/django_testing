@@ -5,6 +5,9 @@ from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
 
+pytestmark = pytest.mark.django_db
+
+
 @pytest.mark.parametrize(
     "name, args",
     (
@@ -15,7 +18,6 @@ from pytest_django.asserts import assertRedirects
         ('users:signup', None)
     )
 )
-@pytest.mark.django_db
 def test_pages_availability(client, name, args):
     url = reverse(name, args=None if not args else (args.id,))
     response = client.get(url)

@@ -9,6 +9,9 @@ from news.models import News, Comment
 from yanews import settings
 
 
+pytestmark = pytest.mark.django_db
+
+
 @pytest.fixture
 def news_collection():
     News.objects.bulk_create(
@@ -37,7 +40,6 @@ def detail_url(news):
 
 
 @pytest.mark.usefixtures('news_collection')
-@pytest.mark.django_db
 def test_news_count(client):
     response = client.get(reverse('news:home'))
     assert response.context['object_list'].count(
@@ -45,7 +47,6 @@ def test_news_count(client):
 
 
 @pytest.mark.usefixtures('news_collection')
-@pytest.mark.django_db
 def test_news_order(client):
     response = client.get(reverse('news:home'))
     news_in_context = [
@@ -54,7 +55,6 @@ def test_news_order(client):
     assert news_in_context == sorted(news_in_context, reverse=True)
 
 
-@pytest.mark.django_db
 def test_comments_order(client, detail_url):
     response = client.get(detail_url)
     assert 'news' in response.context
@@ -65,7 +65,6 @@ def test_comments_order(client, detail_url):
     assert comment_timestamps == sorted(comment_timestamps)
 
 
-@pytest.mark.django_db
 def test_anonymous_client_has_no_form(client, detail_url):
     response = client.get(detail_url)
     assert 'form' not in response.context

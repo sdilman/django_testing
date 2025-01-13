@@ -1,4 +1,5 @@
 from django.test.client import Client
+from django.urls import reverse
 import pytest
 
 from news.models import News, Comment
@@ -44,3 +45,11 @@ def comment(author, news):
         author=author
     )
 
+@pytest.fixture()
+def news_url(news):
+    return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture()
+def comments_url(news_url):
+    return f'{news_url}#comments'
