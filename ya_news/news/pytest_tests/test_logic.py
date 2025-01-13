@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-from django.urls import reverse
 import pytest
 from pytest_django.asserts import assertRedirects, assertFormError
 
@@ -51,10 +50,10 @@ def test_user_cant_use_bad_words(author_client, news_url, request_data):
 
 
 def test_author_can_edit_comment(
-    author_client, comment, comments_url
+    author_client, comment, comments_url, comment_edit_url
 ):
     response = author_client.post(
-        reverse('news:edit', args=(comment.id,)),
+        comment_edit_url,
         data=UPDATE_COMMENT_REQUEST_DATA
     )
     assertRedirects(response, comments_url)
@@ -65,10 +64,10 @@ def test_author_can_edit_comment(
 
 
 def test_user_cant_edit_comment_of_another_user(
-    reader_client, comment
+    reader_client, comment, comment_edit_url
 ):
     response = reader_client.post(
-        reverse('news:edit', args=(comment.id,)),
+        comment_edit_url,
         data=UPDATE_COMMENT_REQUEST_DATA
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
@@ -77,21 +76,17 @@ def test_user_cant_edit_comment_of_another_user(
 
 
 def test_author_can_delete_comment(
-    author_client, comment, comments_url
+    author_client, comment, comments_url, comment_delete_url
 ):
-    response = author_client.post(
-        reverse('news:delete', args=(comment.id,))
-    )
+    response = author_client.post(comment_delete_url)
     assertRedirects(response, comments_url)
     assert not Comment.objects.filter(pk=comment.pk).exists()
 
 
 def test_user_cant_delete_comment_of_another_user(
-    reader_client, comment
+    reader_client, comment, comment_delete_url
 ):
-    response = reader_client.post(
-        reverse('news:delete', args=(comment.id,))
-    )
+    response = reader_client.post(comment_delete_url)
     assert response.status_code == HTTPStatus.NOT_FOUND
     updated_comment = Comment.objects.get(pk=comment.pk)
     assert updated_comment == comment
