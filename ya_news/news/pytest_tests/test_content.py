@@ -1,97 +1,76 @@
-from http import HTTPStatus
+from datetime import datetime, timedelta
+import pytest
 
 from django.urls import reverse
-import pytest
-from pytest_django.asserts import assertRedirects, assertFormError
+from django.utils import timezone
 
-from news.forms import BAD_WORDS, WARNING
-from news.models import Comment
-
-
-COMMENT_TEXT = 'Новый текст'
-UPDATED_COMMENT_TEXT = 'Обновлённый комментарий'
-UPDATE_COMMENT_REQUEST_DATA = {'text': UPDATED_COMMENT_TEXT}
-NEWS_TEXT_MASK = 'Какой-то текст, {}, еще текст'
+from news.forms import CommentForm
+from news.models import News, Comment
+from yanews import settings
 
 
 pytestmark = pytest.mark.django_db
 
 
-def test_anonymous_user_cant_create_comment(
-    client, news_url
-):
-    client.post(news_url, data={'text': COMMENT_TEXT})
-    assert Comment.objects.count() == 0
-
-
-def test_user_can_create_comment(
-    author, author_client, news_url, comments_url, news
-):
-    response = author_client.post(news_url, {'text': COMMENT_TEXT})
-    assertRedirects(response, comments_url)
-    assert Comment.objects.count() == 1
-    comment = Comment.objects.get()
-    assert comment.text == COMMENT_TEXT
-    assert comment.news == news
-    assert comment.author == author
-
-
-@pytest.mark.parametrize(
-    "request_data", [
-        {'text': NEWS_TEXT_MASK.format(bad_word)} for bad_word in BAD_WORDS
-    ]
-)
-def test_user_cant_use_bad_words(author_client, news_url, request_data):
-    for bad_word in BAD_WORDS:
-        response = author_client.post(
-            news_url, request_data
+@pytest.fixture
+def news_collection():
+    News.objects.bulk_create(
+        News(
+            title=f'Новость {index}',
+            text='Просто текст.',
+            date=datetime.today() - timedelta(days=index)
         )
-        assertFormError(response, 'form', 'text', errors=WARNING)
-        assert Comment.objects.count() == 0
-
-
-def test_author_can_edit_comment(
-    author_client, comment, comments_url
-):
-    response = author_client.post(
-        reverse('news:edit', args=(comment.id,)),
-        data=UPDATE_COMMENT_REQUEST_DATA
+        for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
     )
-    assertRedirects(response, comments_url)
-    updated_comment = Comment.objects.get(pk=comment.pk)
-    assert updated_comment.text == UPDATE_COMMENT_REQUEST_DATA['text']
-    assert updated_comment.author == comment.author
-    assert updated_comment.news == comment.news
 
 
-def test_user_cant_edit_comment_of_another_user(
-    reader_client, comment
-):
-    response = reader_client.post(
-        reverse('news:edit', args=(comment.id,)),
-        data=UPDATE_COMMENT_REQUEST_DATA
-    )
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    updated_comment = Comment.objects.get(pk=comment.pk)
-    assert updated_comment == comment
+@pytest.fixture
+def comment_collection(news, author):
+    for index in range(10):
+        comment = Comment.objects.create(
+            news=news, author=author, text=f'Tекст {index}',
+        )
+        comment.created = timezone.now() + timedelta(days=index)
+        comment.save()
 
 
-def test_author_can_delete_comment(
-    author_client, comment, comments_url
-):
-    response = author_client.post(
-        reverse('news:delete', args=(comment.id,))
-    )
-    assertRedirects(response, comments_url)
-    assert not Comment.objects.filter(pk=comment.pk).exists()
+@pytest.fixture
+def detail_url(news):
+    return reverse('news:detail', args=(news.id,))
 
 
-def test_user_cant_delete_comment_of_another_user(
-    reader_client, comment
-):
-    response = reader_client.post(
-        reverse('news:delete', args=(comment.id,))
-    )
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    updated_comment = Comment.objects.get(pk=comment.pk)
-    assert updated_comment == comment
+@pytest.mark.usefixtures('news_collection')
+def test_news_count(client):
+    response = client.get(reverse('news:home'))
+    assert response.context['object_list'].count(
+    ) == settings.NEWS_COUNT_ON_HOME_PAGE
+
+
+@pytest.mark.usefixtures('news_collection')
+def test_news_order(client):
+    response = client.get(reverse('news:home'))
+    news_in_context = [
+        news.date for news in response.context['object_list']
+    ]
+    assert news_in_context == sorted(news_in_context, reverse=True)
+
+
+def test_comments_order(client, detail_url):
+    response = client.get(detail_url)
+    assert 'news' in response.context
+    news = response.context['news']
+    comment_timestamps = [
+        comment.created for comment in news.comment_set.all()
+    ]
+    assert comment_timestamps == sorted(comment_timestamps)
+
+
+def test_anonymous_client_has_no_form(client, detail_url):
+    response = client.get(detail_url)
+    assert 'form' not in response.context
+
+
+def test_authorized_client_has_form(author_client, detail_url):
+    response = author_client.get(detail_url)
+    assert 'form' in response.context
+    assert isinstance(response.context['form'], CommentForm)
