@@ -77,6 +77,11 @@ def news_url(news):
 
 
 @pytest.fixture()
+def news_home_url(news):
+    return reverse('news:home')
+
+
+@pytest.fixture()
 def comments_url(news_url):
     return f'{news_url}#comments'
 
@@ -94,3 +99,28 @@ def comment_delete_url(comment):
 @pytest.fixture
 def detail_url(news):
     return reverse('news:detail', args=(news.id,))
+
+
+@pytest.fixture()
+def login_url(news):
+    return reverse('users:login')
+
+
+@pytest.fixture()
+def logout_url(news):
+    return reverse('users:logout')
+
+
+@pytest.fixture()
+def signup_url(news):
+    return reverse('users:signup')
+
+
+@pytest.fixture()
+def comment_edit_redirect_url(login_url, comment_edit_url):
+    return f'{login_url}?next={comment_edit_url}'
+
+
+@pytest.fixture()
+def comment_delete_redirect_url(login_url, comment_delete_url):
+    return f'{login_url}?next={comment_delete_url}'
