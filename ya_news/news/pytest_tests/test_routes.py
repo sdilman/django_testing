@@ -20,28 +20,23 @@ COMMENT_DELETE_REDIRECT_URL = pytest.lazy_fixture('comment_delete_redirect_url')
 
 
 @pytest.mark.parametrize(
-    "url", [NEWS_HOME_URL, NEWS_URL, LOGIN_URL, LOGOUT_URL, SIGNUP_URL]
-)
-def test_pages_availability(client, url):
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize(
-    "url", [COMMENT_EDIT_URL, COMMENT_DELETE_URL]
-)
-@pytest.mark.parametrize(
-    "user_client, status",
+    "url, client, status_code", 
     (
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),
-        (pytest.lazy_fixture('reader_client'), HTTPStatus.NOT_FOUND)
+        (NEWS_HOME_URL, pytest.lazy_fixture('anonymous_client'), HTTPStatus.OK),
+        (NEWS_URL, pytest.lazy_fixture('anonymous_client'), HTTPStatus.OK),
+        (LOGIN_URL, pytest.lazy_fixture('anonymous_client'), HTTPStatus.OK),
+        (LOGOUT_URL, pytest.lazy_fixture('anonymous_client'), HTTPStatus.OK),
+        (SIGNUP_URL, pytest.lazy_fixture('anonymous_client'), HTTPStatus.OK),
+        (COMMENT_EDIT_URL, pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (COMMENT_EDIT_URL, pytest.lazy_fixture('reader_client'), HTTPStatus.NOT_FOUND),
+        (COMMENT_DELETE_URL, pytest.lazy_fixture('author_client'), HTTPStatus.OK),
+        (COMMENT_DELETE_URL, pytest.lazy_fixture('reader_client'), HTTPStatus.NOT_FOUND),
     )
 )
-def test_availability_for_comment_edit_and_delete(
-    url, user_client, status
-):
-    response = user_client.get(url)
-    assert response.status_code == status
+def test_status_code(url, client, status_code):
+    response = client.get(url)
+    assert response.status_code == status_code
+
 
 
 @pytest.mark.parametrize(
