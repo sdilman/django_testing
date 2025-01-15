@@ -1,14 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.urls import reverse
-from django.test import Client, TestCase
 
 from notes.forms import NoteForm
-from notes.models import Note
 from notes.tests.settings import (
-    NOTE_TITLE, NOTE_TEXT, NOTE_SLUG,
     URL_NOTES_LIST, URL_ADD, URL_EDIT
 )
 from notes.tests.test_base import TestBase
+
 
 User = get_user_model()
 
@@ -23,12 +20,14 @@ class TestContent(TestBase):
         for client, verify in user_results:
             with self.subTest(client=client):
                 verify(
-                    self.note, client.get(URL_NOTES_LIST).context['object_list']
+                    self.note,
+                    client.get(URL_NOTES_LIST).context['object_list']
                 )
 
     def test_pages_contains_form(self):
         for url in (URL_ADD, URL_EDIT):
             with self.subTest(url=url):
                 self.assertIsInstance(
-                    self.author_client.get(url).context.get('form'), NoteForm
-                ) 
+                    self.author_client.get(url).context.get('form'),
+                    NoteForm
+                )

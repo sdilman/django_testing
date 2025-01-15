@@ -1,16 +1,14 @@
 from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
 from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
 from notes.tests.settings import (
-    NOTE_TITLE, NOTE_TEXT, NOTE_SLUG,
     NOTE_TITLE_NEW, NOTE_TEXT_NEW, NOTE_SLUG_NEW,
     NOTE_TITLE_FOR_UPDATE, NOTE_TEXT_FOR_UPDATE,
-    URL_NOTES_LIST, URL_ADD, URL_EDIT,
+    URL_ADD, URL_EDIT,
     URL_LOGIN_REDIRECT_ADD, URL_SUCCESS,
     URL_DELETE
 )
@@ -38,9 +36,9 @@ class TestLogic(TestBase):
         self.assertRedirects(response, URL_SUCCESS)
         self.assertEqual(Note.objects.count(), self.num_of_notes + 1)
         new_note = Note.objects.filter(
-            title = self.form_data['title'],
-            text = self.form_data['text'],
-            slug = self.form_data['slug'],
+            title=self.form_data['title'],
+            text=self.form_data['text'],
+            slug=self.form_data['slug'],
         ).get()
         self.assertEqual(new_note.author, self.author)
 
@@ -71,8 +69,8 @@ class TestLogic(TestBase):
         self.assertRedirects(response, URL_SUCCESS)
         self.assertEqual(Note.objects.count(), self.num_of_notes + 1)
         new_note = Note.objects.filter(
-            title = self.form_data['title'],
-            text = self.form_data['text']
+            title=self.form_data['title'],
+            text=self.form_data['text']
         ).get()
         expected_slug = slugify(self.form_data['title'])
         self.assertEqual(new_note.slug, expected_slug)
