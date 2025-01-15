@@ -33,35 +33,24 @@ class TestRoutes(TestCase):
         )
 
     def test_status_code(self):
-        ...
-
-    def test_redirect(self):
-        ...
-
-
-    def test_home_availability_for_anonymous_user(self):
-        for url in (URL_HOME, URL_LOGIN, URL_LOGOUT, URL_SIGNUP):
-            with self.subTest(url=url):
-                self.assertEqual(
-                    self.client.get(url).status_code, HTTPStatus.OK
-                )
-
-    def test_pages_availability_for_auth_user(self):
-        for url in (URL_NOTES_LIST, URL_ADD, URL_SUCCESS):
-            with self.subTest(url=url):
-                response = self.not_author_client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_pages_availability_for_author_and_non_author(self):
-        urls = URL_DETAIL, URL_DELETE, URL_EDIT
-        user_results = (
-            (self.author_client, HTTPStatus.OK),
-            (self.not_author_client, HTTPStatus.NOT_FOUND)
+        cases = (
+            (URL_HOME, self.client, HTTPStatus.OK),
+            (URL_LOGIN, self.client, HTTPStatus.OK),
+            (URL_LOGOUT, self.client, HTTPStatus.OK),
+            (URL_SIGNUP, self.client, HTTPStatus.OK),
+            (URL_NOTES_LIST, self.not_author_client, HTTPStatus.OK),
+            (URL_ADD, self.not_author_client, HTTPStatus.OK),
+            (URL_SUCCESS, self.not_author_client, HTTPStatus.OK),
+            (URL_DETAIL, self.author_client, HTTPStatus.OK),
+            (URL_DELETE, self.author_client, HTTPStatus.OK),
+            (URL_EDIT, self.author_client, HTTPStatus.OK),
+            (URL_DETAIL, self.not_author_client, HTTPStatus.NOT_FOUND),
+            (URL_DELETE, self.not_author_client, HTTPStatus.NOT_FOUND),
+            (URL_EDIT, self.not_author_client, HTTPStatus.NOT_FOUND),
         )
-        for client, result in user_results:
-            for url in urls:
-                with self.subTest(url=url, client=client):
-                    self.assertEqual(client.get(url).status_code, result)
+        for url, client, result in cases:
+            with self.subTest(url=url, client=client, result=result):
+                self.assertEqual(client.get(url).status_code, result)
 
     def test_redirects(self):
         urls = (
