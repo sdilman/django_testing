@@ -67,16 +67,6 @@ def comment(news, author):
     )
 
 
-@pytest.fixture
-def comment_collection(news, author):
-    for index in range(10):
-        comment = Comment.objects.create(
-            news=news, author=author, text=f'Tекст {index}',
-        )
-        comment.created = timezone.now() + timedelta(days=index)
-        comment.save()
-
-
 @pytest.fixture()
 def news_url(news):
     return reverse('news:detail', args=(news.id,))

@@ -111,5 +111,3 @@ class TestLogic(TestBase):
             self.assertEqual(note_after.text, note.text)
             self.assertEqual(note_after.slug, note.slug)
             self.assertEqual(note_after.author, note.author)
-
-

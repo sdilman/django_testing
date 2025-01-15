@@ -1,9 +1,7 @@
 from django.urls import reverse
-from django.utils import timezone
 import pytest
 
 from news.forms import CommentForm
-from news.models import Comment, News
 from yanews import settings
 
 
