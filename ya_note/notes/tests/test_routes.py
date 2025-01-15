@@ -11,26 +11,12 @@ from notes.tests.settings import (
     URL_LOGIN_REDIRECT_ADD, URL_LOGIN_REDIRECT_EDIT, URL_LOGIN_REDIRECT_SUCCESS,
     URL_LOGIN_REDIRECT_NOTES_LIST, URL_LOGIN_REDIRECT_DELETE, URL_LOGIN_REDIRECT_DETAIL
 )
+from notes.tests.test_base import TestBase
 
 User = get_user_model()
 
 
-class TestRoutes(TestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.author = User.objects.create(username='Автор')
-        cls.author_client = Client()
-        cls.author_client.force_login(cls.author)
-        cls.not_author = User.objects.create(username='Не автор')
-        cls.not_author_client = Client()
-        cls.not_author_client.force_login(cls.not_author)
-        cls.note = Note.objects.create(
-            title='Test News Title',
-            text='Test News Text',
-            slug='slug-test-0123456789',
-            author=cls.author
-        )
+class TestRoutes(TestBase):
 
     def test_status_code(self):
         cases = (

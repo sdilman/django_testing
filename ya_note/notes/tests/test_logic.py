@@ -14,31 +14,21 @@ from notes.tests.settings import (
     URL_LOGIN_REDIRECT_ADD, URL_SUCCESS,
     URL_DELETE
 )
+from notes.tests.test_base import TestBase
 
 User = get_user_model()
 
 
-class TestLogic(TestCase):
+class TestLogic(TestBase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.author = User.objects.create(username='Автор')
-        cls.author_client = Client()
-        cls.author_client.force_login(cls.author)
-        cls.not_author = User.objects.create(username='Не автор')
-        cls.not_author_client = Client()
-        cls.not_author_client.force_login(cls.not_author)
+        super().setUpTestData()
         cls.form_data = {
             'title': NOTE_TITLE_NEW,
             'text': NOTE_TEXT_NEW,
             'slug': NOTE_SLUG_NEW
         }
-        cls.note = Note.objects.create(
-            title=NOTE_TITLE,
-            text=NOTE_TEXT,
-            slug=NOTE_SLUG,
-            author=cls.author
-        )
         cls.num_of_notes = Note.objects.count()
 
     def test_user_can_create_note(self):
@@ -110,11 +100,16 @@ class TestLogic(TestCase):
         self.assertEqual(Note.objects.filter(pk=self.note.pk).exists(), False)
 
     def test_other_user_cant_delete_note(self):
+        notes_before = Note.objects.all()
         response = self.not_author_client.post(URL_DELETE)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        note_from_db = Note.objects.filter(pk=self.note.pk).get()
-        self.assertEqual(note_from_db.title, self.note.title)
-        self.assertEqual(note_from_db.text, self.note.text)
-        self.assertEqual(note_from_db.slug, self.note.slug)
-        self.assertEqual(note_from_db.author, self.note.author)
+        notes_after = Note.objects.all()
+        self.assertEqual(notes_before.count(), notes_after.count())
+        for note in notes_before:
+            note_after = notes_after.filter(pk=note.pk).get()
+            self.assertEqual(note_after.title, note.title)
+            self.assertEqual(note_after.text, note.text)
+            self.assertEqual(note_after.slug, note.slug)
+            self.assertEqual(note_after.author, note.author)
+
 
