@@ -4,7 +4,10 @@ from django.test import TestCase
 
 from notes.forms import NoteForm
 from notes.models import Note
-
+from notes.tests.settings import (
+    NOTE_TITLE, NOTE_TEXT, NOTE_SLUG,
+    URL_NOTES_LIST, URL_ADD, URL_EDIT
+)
 
 User = get_user_model()
 
@@ -16,9 +19,9 @@ class TestContent(TestCase):
         cls.author = User.objects.create(username='Автор')
         cls.not_author = User.objects.create(username='Не автор')
         cls.note = Note.objects.create(
-            title='Test News Title',
-            text='Test News Text',
-            slug='slug-test-0123456789',
+            title=NOTE_TITLE,
+            text=NOTE_TEXT,
+            slug=NOTE_SLUG,
             author=cls.author
         )
 
@@ -26,23 +29,16 @@ class TestContent(TestCase):
         user_results = (
             (self.author, self.assertIn), (self.not_author, self.assertNotIn)
         )
-        url = reverse('notes:list')
         for user, verify in user_results:
             with self.subTest(user=user):
                 self.client.force_login(user)
-                response = self.client.get(url)
-                object_list = response.context['object_list']
-                verify(self.note, object_list)
+                response = self.client.get(URL_NOTES_LIST)
+                verify(self.note, response.context['object_list'])
 
     def test_pages_contains_form(self):
-        name_args = (
-            ('notes:add', None),
-            ('notes:edit', (self.note.slug,))
-        )
-        for name, args in name_args:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
+        for url in (URL_ADD, URL_EDIT):
+            with self.subTest(url=url):
                 self.client.force_login(self.author)
-                response = self.client.get(url)
-                self.assertIn('form', response.context)
-                self.assertIsInstance(response.context['form'], NoteForm)
+                self.assertIsInstance(
+                    self.client.get(url).context.get('form'), NoteForm
+                ) 
