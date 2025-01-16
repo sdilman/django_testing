@@ -43,3 +43,8 @@ class TestBase(TestCase):
             slug=NOTE_SLUG,
             author=cls.author
         )
+        cls.form_data = {
+            'title': 'New Title News Text',
+            'text': 'New Test News Text',
+            'slug': 'new-slug-test-0123456789'
+        }
