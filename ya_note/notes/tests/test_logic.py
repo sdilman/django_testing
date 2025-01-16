@@ -5,14 +5,13 @@ from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
-from notes.tests.settings import (
-    NOTE_TITLE_NEW, NOTE_TEXT_NEW, NOTE_SLUG_NEW,
-    NOTE_TITLE_FOR_UPDATE, NOTE_TEXT_FOR_UPDATE,
+from notes.tests.test_base import (
     URL_ADD, URL_EDIT,
     URL_LOGIN_REDIRECT_ADD, URL_SUCCESS,
     URL_DELETE
 )
 from notes.tests.test_base import TestBase
+
 
 User = get_user_model()
 
@@ -23,9 +22,9 @@ class TestLogic(TestBase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.form_data = {
-            'title': NOTE_TITLE_NEW,
-            'text': NOTE_TEXT_NEW,
-            'slug': NOTE_SLUG_NEW
+            'title': 'New Title News Text',
+            'text': 'New Test News Text',
+            'slug': 'new-slug-test-0123456789'
         }
         cls.num_of_notes = Note.objects.count()
 
@@ -49,8 +48,8 @@ class TestLogic(TestBase):
 
     def test_not_unique_slug(self):
         note = Note.objects.create(
-            title=NOTE_TITLE_FOR_UPDATE,
-            text=NOTE_TEXT_FOR_UPDATE,
+            title='New Test News Title',
+            text='New Test News Text',
             slug=self.form_data['slug'],
             author=self.author
         )

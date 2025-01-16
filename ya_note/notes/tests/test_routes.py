@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from django.contrib.auth import get_user_model
 
-from notes.tests.settings import (
+from notes.tests.test_base import (
     URL_HOME, URL_LOGIN, URL_LOGOUT, URL_SIGNUP,
     URL_NOTES_LIST, URL_SUCCESS, URL_DETAIL, URL_DELETE, URL_EDIT, URL_ADD,
     URL_LOGIN_REDIRECT_ADD, URL_LOGIN_REDIRECT_EDIT,
@@ -11,6 +11,7 @@ from notes.tests.settings import (
     URL_LOGIN_REDIRECT_DETAIL
 )
 from notes.tests.test_base import TestBase
+
 
 User = get_user_model()
 

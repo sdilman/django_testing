@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from notes.forms import NoteForm
-from notes.tests.settings import (
+from notes.tests.test_base import (
     URL_NOTES_LIST, URL_ADD, URL_EDIT
 )
 from notes.tests.test_base import TestBase
