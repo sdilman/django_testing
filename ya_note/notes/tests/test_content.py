@@ -12,17 +12,20 @@ User = get_user_model()
 
 class TestContent(TestBase):
 
-    def test_notes_list_for_different_users(self):
-        user_results = (
-            (self.author_client, self.assertIn),
-            (self.not_author_client, self.assertNotIn)
+    def test_notes_list_for_author(self):
+        note_in_response = self.author_client.get(
+            URL_NOTES_LIST
+        ).context['object_list'].filter(id=self.note.id).get()
+        self.assertEqual(self.note.title, note_in_response.title)
+        self.assertEqual(self.note.text, note_in_response.text)
+        self.assertEqual(self.note.slug, note_in_response.slug)
+        self.assertEqual(self.note.author, note_in_response.author)
+
+    def test_notes_list_for_non_author(self):
+        self.assertNotIn(
+            self.note,
+            self.not_author_client.get(URL_NOTES_LIST).context['object_list']
         )
-        for client, verify in user_results:
-            with self.subTest(client=client):
-                verify(
-                    self.note,
-                    client.get(URL_NOTES_LIST).context['object_list']
-                )
 
     def test_pages_contains_form(self):
         for url in (URL_ADD, URL_EDIT):
