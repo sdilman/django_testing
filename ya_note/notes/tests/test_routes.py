@@ -21,18 +21,27 @@ class TestRoutes(TestBase):
     def test_status_code(self):
         cases = (
             (URL_HOME, self.client, HTTPStatus.OK),
-            (URL_LOGIN, self.client, HTTPStatus.OK),
-            (URL_LOGOUT, self.client, HTTPStatus.OK),
-            (URL_SIGNUP, self.client, HTTPStatus.OK),
-            (URL_NOTES_LIST, self.not_author_client, HTTPStatus.OK),
-            (URL_ADD, self.not_author_client, HTTPStatus.OK),
-            (URL_SUCCESS, self.not_author_client, HTTPStatus.OK),
+            (URL_NOTES_LIST, self.author_client, HTTPStatus.OK),
+            (URL_ADD, self.author_client, HTTPStatus.OK),
+            (URL_SUCCESS, self.author_client, HTTPStatus.OK),
+            (URL_NOTES_LIST, self.client, HTTPStatus.FOUND),
+            (URL_ADD, self.client, HTTPStatus.FOUND),
+            (URL_SUCCESS, self.client, HTTPStatus.FOUND),
             (URL_DETAIL, self.author_client, HTTPStatus.OK),
             (URL_DELETE, self.author_client, HTTPStatus.OK),
             (URL_EDIT, self.author_client, HTTPStatus.OK),
             (URL_DETAIL, self.not_author_client, HTTPStatus.NOT_FOUND),
             (URL_DELETE, self.not_author_client, HTTPStatus.NOT_FOUND),
             (URL_EDIT, self.not_author_client, HTTPStatus.NOT_FOUND),
+            (URL_DETAIL, self.client, HTTPStatus.FOUND),
+            (URL_DELETE, self.client, HTTPStatus.FOUND),
+            (URL_EDIT, self.client, HTTPStatus.FOUND),
+            (URL_LOGIN, self.client, HTTPStatus.OK),
+            (URL_LOGOUT, self.client, HTTPStatus.OK),
+            (URL_SIGNUP, self.client, HTTPStatus.OK),
+            (URL_LOGIN, self.author_client, HTTPStatus.OK),
+            (URL_LOGOUT, self.author_client, HTTPStatus.OK),
+            (URL_SIGNUP, self.author_client, HTTPStatus.OK),
         )
         for url, client, result in cases:
             with self.subTest(url=url, client=client, result=result):
@@ -49,5 +58,4 @@ class TestRoutes(TestBase):
         )
         for url_call, url_redirect in urls:
             with self.subTest(url=url_call):
-                response = self.client.get(url_call)
-                self.assertRedirects(response, url_redirect)
+                self.assertRedirects(self.client.get(url_call), url_redirect)
