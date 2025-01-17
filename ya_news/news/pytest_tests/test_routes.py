@@ -21,31 +21,31 @@ COMMENT_DELETE_REDIRECT_URL = pytest.lazy_fixture(
 
 
 @pytest.mark.parametrize(
-    "url, client, status_code",
+    "url, test_client, status_code",
     (
         (
             NEWS_HOME_URL,
-            pytest.lazy_fixture('anonymous_client'),
+            pytest.lazy_fixture('client'),
             HTTPStatus.OK
         ),
         (
             NEWS_URL,
-            pytest.lazy_fixture('anonymous_client'),
+            pytest.lazy_fixture('client'),
             HTTPStatus.OK
         ),
         (
             LOGIN_URL,
-            pytest.lazy_fixture('anonymous_client'),
+            pytest.lazy_fixture('client'),
             HTTPStatus.OK
         ),
         (
             LOGOUT_URL,
-            pytest.lazy_fixture('anonymous_client'),
+            pytest.lazy_fixture('client'),
             HTTPStatus.OK
         ),
         (
             SIGNUP_URL,
-            pytest.lazy_fixture('anonymous_client'),
+            pytest.lazy_fixture('client'),
             HTTPStatus.OK
         ),
         (
@@ -70,8 +70,8 @@ COMMENT_DELETE_REDIRECT_URL = pytest.lazy_fixture(
         ),
     )
 )
-def test_status_code(url, client, status_code):
-    response = client.get(url)
+def test_status_code(url, test_client, status_code):
+    response = test_client.get(url)
     assert response.status_code == status_code
 
 

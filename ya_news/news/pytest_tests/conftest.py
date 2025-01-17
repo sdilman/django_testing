@@ -33,12 +33,6 @@ def reader_client(reader):
 
 
 @pytest.fixture
-def anonymous_client():
-    client = Client()
-    return client
-
-
-@pytest.fixture
 def news():
     return News.objects.create(
         title='Заголовок',
