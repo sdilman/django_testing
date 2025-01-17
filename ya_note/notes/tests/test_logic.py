@@ -145,5 +145,3 @@ class TestLogic(TestBase):
     def test_other_user_cant_delete_note(self):
         response = self.not_author_client.post(URL_DELETE)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-
