@@ -20,6 +20,7 @@ ANONIMOUS_CLIENT = lazy_fixture("client")
 AUTHOR_CLIENT = lazy_fixture("author_client")
 READER_CLIENT = lazy_fixture("reader_client")
 
+
 @mark.parametrize(
     "url, test_client, status_code",
     (
