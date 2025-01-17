@@ -10,7 +10,7 @@ from news.models import Comment
 ADD_COMMENT_REQUEST_DATA = {'text': 'Новый текст'}
 UPDATE_COMMENT_REQUEST_DATA = {'text': 'Обновлённый комментарий'}
 BAD_WORDS_REQUEST_DATA = [
-    {'text': f'Какой-то текст, {bad_word}, еще текст'} 
+    {'text': f'Какой-то текст, {bad_word}, еще текст'}
     for bad_word in BAD_WORDS
 ]
 
