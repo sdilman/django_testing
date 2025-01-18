@@ -1,4 +1,3 @@
-from django.urls import reverse
 import pytest
 
 from news.forms import CommentForm
@@ -8,13 +7,13 @@ from yanews import settings
 pytestmark = pytest.mark.django_db
 
 
-def test_news_count(client, news_collection):
-    assert client.get(reverse('news:home')).context['object_list'].count(
+def test_news_count(client, news_home_url, news_collection):
+    assert client.get(news_home_url).context['object_list'].count(
     ) == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
-def test_news_order(client, news_collection):
-    response = client.get(reverse('news:home'))
+def test_news_order(client, news_home_url, news_collection):
+    response = client.get(news_home_url)
     news_in_context = [
         news.date for news in response.context['object_list']
     ]
