@@ -10,15 +10,13 @@ User = get_user_model()
 class TestContent(TestBase):
 
     def test_notes_list_for_author(self):
-        note_query = self.author_client.get(
-            URL_NOTES_LIST
-        ).context['object_list'].filter(id=self.note.id)
-        self.assertTrue(note_query.exists())
-        note_in_response = note_query.get()
-        self.assertEqual(self.note.title, note_in_response.title)
-        self.assertEqual(self.note.text, note_in_response.text)
-        self.assertEqual(self.note.slug, note_in_response.slug)
-        self.assertEqual(self.note.author, note_in_response.author)
+        response_context = self.author_client.get(URL_NOTES_LIST).context
+        self.assertIn('object_list', response_context)
+        note = response_context['object_list'].get(id=self.note.id)
+        self.assertEqual(self.note.title, note.title)
+        self.assertEqual(self.note.text, note.text)
+        self.assertEqual(self.note.slug, note.slug)
+        self.assertEqual(self.note.author, note.author)
 
     def test_notes_list_for_non_author(self):
         self.assertNotIn(

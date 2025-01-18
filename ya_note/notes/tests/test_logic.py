@@ -16,17 +16,6 @@ from notes.tests.test_base import TestBase
 User = get_user_model()
 
 
-def check_notes_unchanged(f):
-    """Adds check that Note table is unchanged after test logic is over."""
-
-    def wrapper(*args, **kwargs):
-        notes_before = list(Note.objects.values())
-        f(*args, **kwargs)
-        notes_after = list(Note.objects.values())
-        assert sorted(notes_before) == sorted(notes_after)
-    return wrapper
-
-
 def check_notes_added_one(author, title, text, slug):
     """Add check that Note table obtained one record with given fields."""
 
@@ -87,18 +76,25 @@ class TestLogic(TestBase):
             self.assertRedirects(response, URL_SUCCESS)
         return work()
 
-    @check_notes_unchanged
     def test_anonymous_user_cant_create_note(self):
-        response = self.client.post(URL_ADD, data=self.form_data)
-        self.assertRedirects(response, URL_LOGIN_REDIRECT_ADD)
+        self.assertRedirects(
+            self.client.post(URL_ADD, data=self.form_data),
+            URL_LOGIN_REDIRECT_ADD
+        )
+        self.assertEqual(
+            set(Note.objects.values_list()),
+            self.initial_note_table_content()
+        )
 
-    @check_notes_unchanged
     def test_not_unique_slug(self):
+        notes_before = list(Note.objects.values())
         self.form_data['slug'] = self.note.slug
         response = self.author_client.post(URL_ADD, data=self.form_data)
         self.assertFormError(
             response, 'form', 'slug', errors=(self.note.slug + WARNING)
         )
+        notes_after = list(Note.objects.values())
+        self.assertEqual(sorted(notes_before), sorted(notes_after))
 
     def test_empty_slug(self):
         @check_notes_added_one(
@@ -118,16 +114,18 @@ class TestLogic(TestBase):
     def test_author_can_edit_note(self):
         response = self.author_client.post(URL_EDIT, self.form_data)
         self.assertRedirects(response, URL_SUCCESS)
-        note_from_db = Note.objects.filter(pk=self.note.pk).get()
-        self.assertEqual(self.form_data['title'], note_from_db.title)
-        self.assertEqual(self.form_data['text'], note_from_db.text)
-        self.assertEqual(self.form_data['slug'], note_from_db.slug)
-        self.assertEqual(self.note.author, note_from_db.author)
+        note = Note.objects.get(pk=self.note.pk)
+        self.assertEqual(self.form_data['title'], note.title)
+        self.assertEqual(self.form_data['text'], note.text)
+        self.assertEqual(self.form_data['slug'], note.slug)
+        self.assertEqual(self.note.author, note.author)
 
-    @check_notes_unchanged
     def test_other_user_cant_edit_note(self):
+        notes_before = list(Note.objects.values())
         response = self.not_author_client.post(URL_EDIT, self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        notes_after = list(Note.objects.values())
+        self.assertEqual(sorted(notes_before), sorted(notes_after))
 
     def test_author_can_delete_note(self):
         @check_notes_deleted_one(
@@ -141,7 +139,9 @@ class TestLogic(TestBase):
             self.assertRedirects(response, URL_SUCCESS)
         return work()
 
-    @check_notes_unchanged
     def test_other_user_cant_delete_note(self):
+        notes_before = list(Note.objects.values())
         response = self.not_author_client.post(URL_DELETE)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        notes_after = list(Note.objects.values())
+        self.assertEqual(sorted(notes_before), sorted(notes_after))
