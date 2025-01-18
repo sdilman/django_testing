@@ -1,10 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from notes.forms import NoteForm
-from notes.tests.test_base import (
-    URL_NOTES_LIST, URL_ADD, URL_EDIT
-)
-from notes.tests.test_base import TestBase
+from notes.tests.test_base import TestBase, URL_NOTES_LIST, URL_ADD, URL_EDIT
 
 
 User = get_user_model()
@@ -13,9 +10,11 @@ User = get_user_model()
 class TestContent(TestBase):
 
     def test_notes_list_for_author(self):
-        note_in_response = self.author_client.get(
+        note_query = self.author_client.get(
             URL_NOTES_LIST
-        ).context['object_list'].filter(id=self.note.id).get()
+        ).context['object_list'].filter(id=self.note.id)
+        self.assertTrue(note_query.exists())
+        note_in_response = note_query.get()
         self.assertEqual(self.note.title, note_in_response.title)
         self.assertEqual(self.note.text, note_in_response.text)
         self.assertEqual(self.note.slug, note_in_response.slug)
