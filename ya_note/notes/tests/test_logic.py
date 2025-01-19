@@ -46,7 +46,7 @@ class TestLogic(TestBase):
         response = self.client.post(URL_ADD, data=self.form_data)
         self.assertRedirects(response, URL_LOGIN_REDIRECT_ADD)
         notes_after = set(Note.objects.all())
-        assert notes_before == notes_after
+        self.assertEqual(notes_before, notes_after)
 
     def test_not_unique_slug(self):
         notes_before = set(Note.objects.all())
@@ -56,7 +56,7 @@ class TestLogic(TestBase):
             response, 'form', 'slug', errors=(self.note.slug + WARNING)
         )
         notes_after = set(Note.objects.all())
-        assert notes_before == notes_after
+        self.assertEqual(notes_before, notes_after)
 
     def test_author_can_edit_note(self):
         response = self.author_client.post(URL_EDIT, self.form_data)
@@ -68,27 +68,24 @@ class TestLogic(TestBase):
         self.assertEqual(self.note.author, note.author)
 
     def test_other_user_cant_edit_note(self):
-        title = self.note.title
-        text = self.note.text
-        slug = self.note.slug
-        author = self.note.author
         response = self.not_author_client.post(URL_EDIT, self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.assertEqual(self.note.title, title)
-        self.assertEqual(self.note.text, text)
-        self.assertEqual(self.note.slug, slug)
-        self.assertEqual(self.note.author, author)
+        note = Note.objects.get(pk=self.note.pk)
+        self.assertEqual(self.note.title, note.title)
+        self.assertEqual(self.note.text, note.text)
+        self.assertEqual(self.note.slug, note.slug)
+        self.assertEqual(self.note.author, note.author)
 
     def test_author_can_delete_note(self):
         notes_count = Note.objects.count()
         response = self.author_client.post(URL_DELETE)
         self.assertRedirects(response, URL_SUCCESS)
         self.assertEqual(Note.objects.count(), notes_count - 1)
-        self.assertFalse(self.note in Note.objects.all())
+        self.assertFalse(Note.objects.filter(id=self.note.id).exists())
 
     def test_other_user_cant_delete_note(self):
         notes_before = set(Note.objects.values_list())
         response = self.not_author_client.post(URL_DELETE)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         notes_after = set(Note.objects.values_list())
-        assert notes_before == notes_after
+        self.assertEqual(notes_before, notes_after)
