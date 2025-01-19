@@ -107,4 +107,3 @@ class TestLogic(TestBase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         notes_after = set(Note.objects.values_list())
         assert notes_before == notes_after
-
