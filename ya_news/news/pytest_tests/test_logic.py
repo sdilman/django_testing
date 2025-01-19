@@ -7,7 +7,7 @@ from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
 
 
-ADD_UPDATE_COMMENT_REQUEST_DATA = {'text': 'Какой-то текст'}
+COMMENT_REQUEST_DATA = {'text': 'Какой-то текст'}
 BAD_WORDS_REQUEST_DATA = [
     {'text': f'Какой-то текст, {bad_word}, еще текст'}
     for bad_word in BAD_WORDS
@@ -20,18 +20,18 @@ pytestmark = pytest.mark.django_db
 def test_anonymous_user_cant_create_comment(
     client, news_url
 ):
-    client.post(news_url, ADD_UPDATE_COMMENT_REQUEST_DATA)
+    client.post(news_url, COMMENT_REQUEST_DATA)
     assert Comment.objects.count() == 0
 
 
 def test_user_can_create_comment(
     author, author_client, news_url, comments_url, news
 ):
-    response = author_client.post(news_url, ADD_UPDATE_COMMENT_REQUEST_DATA)
+    response = author_client.post(news_url, COMMENT_REQUEST_DATA)
     assertRedirects(response, comments_url)
     assert Comment.objects.count() == 1
     comment = Comment.objects.get()
-    assert comment.text == ADD_UPDATE_COMMENT_REQUEST_DATA['text']
+    assert comment.text == COMMENT_REQUEST_DATA['text']
     assert comment.news == news
     assert comment.author == author
 
@@ -50,11 +50,11 @@ def test_author_can_edit_comment(
 ):
     response = author_client.post(
         comment_edit_url,
-        data=ADD_UPDATE_COMMENT_REQUEST_DATA
+        data=COMMENT_REQUEST_DATA
     )
     assertRedirects(response, comments_url)
     updated_comment = Comment.objects.get(pk=comment.pk)
-    assert updated_comment.text == ADD_UPDATE_COMMENT_REQUEST_DATA['text']
+    assert updated_comment.text == COMMENT_REQUEST_DATA['text']
     assert updated_comment.author == comment.author
     assert updated_comment.news == comment.news
 
@@ -64,7 +64,7 @@ def test_user_cant_edit_comment_of_another_user(
 ):
     response = reader_client.post(
         comment_edit_url,
-        data=ADD_UPDATE_COMMENT_REQUEST_DATA
+        data=COMMENT_REQUEST_DATA
     )
     assert response.status_code == HTTPStatus.NOT_FOUND
     updated_comment = Comment.objects.get(pk=comment.pk)
