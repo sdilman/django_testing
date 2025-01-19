@@ -18,53 +18,45 @@ User = get_user_model()
 
 class TestLogic(TestBase):
 
-    def add_note_execute_check(self, form_data, expected_slug):
+    def add_note_execute_check(self, expected_slug):
         """Make call to add note and check one record added."""
-        notes_before = set(Note.objects.values_list())
+        notes = set(Note.objects.all())
         response = self.author_client.post(
-            URL_ADD, data=form_data
+            URL_ADD, data=self.form_data
         )
         self.assertRedirects(response, URL_SUCCESS)
-        notes_after = set(Note.objects.values_list())
-        self.assertTrue(notes_before <= notes_after)
-        notes_added = notes_after - notes_before
-        self.assertEqual(len(notes_added), 1)
-        note_added = notes_added.pop()
-        self.assertEqual(
-            note_added[1:],
-            (
-                self.form_data['title'],
-                self.form_data['text'],
-                expected_slug,
-                self.author.id
-            )
-        )
+        notes = set(Note.objects.all()) - notes
+        self.assertEqual(len(notes), 1)
+        note = notes.pop()
+        self.assertEqual(note.title, self.form_data['title'])
+        self.assertEqual(note.text, self.form_data['text'])
+        self.assertEqual(note.slug, expected_slug)
+        self.assertEqual(note.author, self.author)
 
     def test_user_can_create_note(self):
-        expected_slug = self.form_data['slug']
-        self.add_note_execute_check(self.form_data, expected_slug)
+        self.add_note_execute_check(self.form_data['slug'])
 
     def test_empty_slug(self):
         self.form_data.pop('slug')
         expected_slug = slugify(self.form_data['title'])
-        self.add_note_execute_check(self.form_data, expected_slug)
+        self.add_note_execute_check(expected_slug)
 
     def test_anonymous_user_cant_create_note(self):
-        notes_before = set(Note.objects.values_list())
+        notes_before = set(Note.objects.all())
         response = self.client.post(URL_ADD, data=self.form_data)
         self.assertRedirects(response, URL_LOGIN_REDIRECT_ADD)
-        notes_after = set(Note.objects.values_list())
+        notes_after = set(Note.objects.all())
         assert notes_before == notes_after
 
     def test_not_unique_slug(self):
-        notes_before = list(Note.objects.values())
+        notes_before = set(Note.objects.all())
         self.form_data['slug'] = self.note.slug
         response = self.author_client.post(URL_ADD, data=self.form_data)
         self.assertFormError(
             response, 'form', 'slug', errors=(self.note.slug + WARNING)
         )
-        notes_after = list(Note.objects.values())
-        assert sorted(notes_before) == sorted(notes_after)
+        notes_after = set(Note.objects.all())
+        assert notes_before == notes_after
 
     def test_author_can_edit_note(self):
         response = self.author_client.post(URL_EDIT, self.form_data)
@@ -76,30 +68,23 @@ class TestLogic(TestBase):
         self.assertEqual(self.note.author, note.author)
 
     def test_other_user_cant_edit_note(self):
-        notes_before = set(Note.objects.values_list())
+        title = self.note.title
+        text = self.note.text
+        slug = self.note.slug
+        author = self.note.author
         response = self.not_author_client.post(URL_EDIT, self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        notes_after = set(Note.objects.values_list())
-        assert notes_before == notes_after
+        self.assertEqual(self.note.title, title)
+        self.assertEqual(self.note.text, text)
+        self.assertEqual(self.note.slug, slug)
+        self.assertEqual(self.note.author, author)
 
     def test_author_can_delete_note(self):
-        notes_before = set(Note.objects.values_list())
+        notes_count = Note.objects.count()
         response = self.author_client.post(URL_DELETE)
         self.assertRedirects(response, URL_SUCCESS)
-        notes_after = set(Note.objects.values_list())
-        self.assertTrue(notes_after <= notes_before)
-        notes_deleted = notes_before - notes_after
-        self.assertEqual(len(notes_deleted), 1)
-        note_deleted = notes_deleted.pop()
-        self.assertEqual(
-            note_deleted[1:],
-            (
-                self.note.title,
-                self.note.text,
-                self.note.slug,
-                self.note.author.id
-            )
-        )
+        self.assertEqual(Note.objects.count(), notes_count - 1)
+        self.assertFalse(self.note in Note.objects.all())
 
     def test_other_user_cant_delete_note(self):
         notes_before = set(Note.objects.values_list())

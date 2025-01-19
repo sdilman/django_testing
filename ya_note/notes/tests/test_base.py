@@ -48,14 +48,3 @@ class TestBase(TestCase):
             'text': 'New Test News Text',
             'slug': 'new-slug-test-0123456789'
         }
-
-    def initial_note_table_content(self):
-        return {
-            (
-                self.note.pk,
-                self.note.title,
-                self.note.text,
-                self.note.slug,
-                self.note.author.pk
-            ),
-        }
